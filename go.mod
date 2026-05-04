@@ -1,5 +1,6 @@
 module taskmaster
 
+<<<<<<< develop
 go 1.25.0
 
 require (
@@ -34,3 +35,6 @@ require (
 	golang.org/x/text v0.34.0 // indirect
 	google.golang.org/protobuf v1.36.10 // indirect
 )
+=======
+go 1.24.0
+>>>>>>> main
