@@ -1,9 +1,7 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"net/http"
+	"github.com/gin-gonic/gin"
 )
 
 type Task struct { //create task struct and export as json
@@ -16,26 +14,34 @@ Title string `json:"title"`
 FixedCost int `json:"fixed_cost"`
 }
 
-func Welcome(w http.ResponseWriter, r *http.Request) {
-fmt.Fprintf(w, "Welcome to Taskmaster API")
-}
-//w: gets response from api | r: http request from api visit
-func HealthCheck(w http.ResponseWriter, r *http.Request) {
-fmt.Fprintf(w, "Taskmaster System: Functional")//print response from func and msg
+func CreateTask(c *gin.Context) {
+	var newTask Task //The empty "clipboard" waiting for data
+	// [&newTask]: We pass the MEMORY ADDRESS so Gin can write directly to our variable.
+	if err := c.ShouldBindJSON(&newTask); err != nil {
+		// : StatusBadRequest. The client sent bad data.
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	message := "Received: " + newTask.Description//store the new data in the Struct 
+	c.JSON(200, gin.H{"message": message, "status": "accepted"})//return 201 status & message
 }
 
-func GetTask(w http.ResponseWriter, r *http.Request) {
-t1 := Task{Description: "Fix Bug", Estimate: 5}//struct of data
-w.Header().Set("Content-Type", "application/json")  //encode response as json
-json.NewEncoder(w).Encode(t1) //tell browser its json data
+func CreateProject(c *gin.Context) {
+var newProject Project//var to store POST request
+if err := c.ShouldBindJSON(&newProject); err != nil {//if there is an error binding
+c.JSON(400, gin.H{"error": err.Error()})//return 400 status and error state
+return
+}
+message := newProject.Title
+c.JSON(201, gin.H{"Project": message, "status": "has been added to the system"})//return 201 status and message
 }
 
 func main() {
-http.HandleFunc("/", Welcome)
-http.HandleFunc("/health", HealthCheck) //route handler to health
-http.HandleFunc("/task", GetTask)//route handler to task
+router := gin.Default()
 
-fmt.Println("Taskmaster Server starting on :8080...")
+router.POST("/task", CreateTask)
+router.POST("/project", CreateProject)
 
-http.ListenAndServe(":8080", nil)
+router.Run()
 }
