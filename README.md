@@ -1,2 +1,155 @@
-# taskmaster
-Web API that enables user to send a JSON list of Tasks, and our concurrent validator will process them and return the results as a web response.
+# TaskMaster
+
+> A concurrent, expressive RESTful API engine for auditing and project management built in Go.
+
+[![Go Version](https://img.shields.io/badge/Go-1.25.0+-00ADD8?style=flat&logo=go)](https://golang.org/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Build](https://img.shields.io/badge/build-passing-brightgreen)]()
+[![API Version](https://img.shields.io/badge/API-v1.1.0-orange)]()
+
+---
+
+## Overview
+
+TaskMaster is a high-performance RESTful API that provides a concurrent engine for auditing and project management. It is designed around Go's native concurrency primitives to process bulk data simultaneously, with clean modular architecture and a focus on code adaptability.
+
+---
+
+## Architecture
+
+```
+  [ CLIENT ] ──(POST /bulk-audit)──► [ GIN ROUTER ]
+                                           │
+          ┌────────────────────────────────┴────────────────────────┐
+          ▼                                                         ▼
+  [ SQL DATABASE ] ◄─────── [ CONCURRENCY ENGINE ] ────────► [ JSON RESPONSE ]
+  (Persistent Stats)        (Goroutine Workers)             (Final Report)
+```
+
+---
+
+## How It Works
+
+TaskMaster's core processing model is built on three Go concurrency primitives:
+
+| Primitive | Role |
+|---|---|
+| **Goroutines** | Spawn parallel workers for every incoming audit request |
+| **Channels** | Safely communicate results between workers and the main API handler |
+| **WaitGroups** | Synchronize the Foreman — ensuring all workers finish before the final report is dispatched |
+
+---
+
+## Features
+
+- **Bulk Validation** — Submit arrays of tasks for simultaneous, high-speed processing via a single API call.
+- **Data Persistence** — Tracks and accumulates cumulative grand totals in a relational database using Go's `database/sql` package.
+- **SQL Injection Protection** — All queries use prepared statements and parameterized placeholders.
+- **Standardized Output** — All responses are marshalled into clean, lowercase JSON for broad web compatibility.
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- [Go](https://golang.org/dl/) `1.25.0` or higher
+- SQLite3 drivers (installed automatically via `go mod tidy`)
+
+### Installation
+
+Clone the repository and install dependencies:
+
+```bash
+git clone https://github.com/PRAIZZZ-08/taskmaster.git
+cd taskmaster
+go mod tidy
+```
+
+### Build
+
+Compile the project into a native binary:
+
+```bash
+go build
+```
+
+### Run
+
+```bash
+./taskmaster
+```
+
+The API server will start and listen for incoming requests.
+
+---
+
+## API Reference
+
+### `POST /bulk-audit`
+
+Submit an array of tasks to be audited concurrently.
+
+**Request Body**
+
+```json
+{
+  "tasks": [
+    { "title": "Task One", "fixed_cost": 100 },
+    { "title": "Task Two", "fixed_cost": 200 }
+  ]
+}
+```
+
+**Response**
+
+```json
+{
+  "status": "complete",
+  "processed": 2,
+  "grand_total": 42,
+  "results": [...]
+}
+```
+
+---
+
+## Testing
+
+Automated unit tests cover all core audit logic. Run the full test suite with:
+
+```bash
+go test -v ./...
+```
+
+All `_test.go` files in the module will be discovered and executed.
+
+---
+
+## Project Structure
+
+```
+taskmaster/
+├── main.go          # Entry point and router setup
+├── audit/           # Core audit and concurrency engine
+├── db/              # Database layer and persistence logic
+├── models/          # Shared data types and structs
+├── handlers/        # Gin HTTP handlers
+└── *main_test.go        # Unit tests
+```
+
+---
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/your-feature`)
+3. Commit your changes (`git commit -m 'Add your feature'`)
+4. Push to the branch (`git push origin feature/your-feature`)
+5. Open a Pull Request
+
+---
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
