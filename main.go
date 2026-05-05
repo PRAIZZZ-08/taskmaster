@@ -4,23 +4,16 @@ import (
 	"fmt"
 	"sync"
 	"github.com/gin-gonic/gin"
+	//"database/sql"
 )
 
-type Task struct { //create task struct and export as json
-Description string `json:"description"`
-Estimate int `json:"estimate"`
+func Welcome(c *gin.Context) {
+fmt.Println("Welcome to Taskmaster API")
 }
 
 type Project struct { //create project struct and export as json
 Title string `json:"title"`
 FixedCost int `json:"fixed_cost"`
-}
-
-func (t Task) Check() string {
-if t.Description == "" {
-return "Invalid: Missing Description"
-}
-return fmt.Sprintf("Audited %s with cost %d", t.Description, t.Estimate)
 }
 
 func (p Project) Check() string {
@@ -29,7 +22,7 @@ return "Invalid: Missing Title"
 }
 return fmt.Sprintf("Audited: %s with cost %d", p.Title, p.FixedCost)
 }
-a
+
 func BulkAudit(c *gin.Context) {
 	var projects []Project
 	if err := c.ShouldBindJSON(&projects); err != nil {//[ShouldBindJSON]: Gin sees the JSON array and fills our slice
@@ -71,22 +64,11 @@ func BulkAudit(c *gin.Context) {
 	})
 }
 
-
-func CreateTask(c *gin.Context) {
-var newTask Task//var to store POST request
-if err := c.ShouldBindJSON(&newTask); err != nil {//if there is an error binding
-c.JSON(400, gin.H{"error": err.Error()})//return 400 status and error state
-return
-}
-message := newTask.Description
-c.JSON(201, gin.H{"Description": message, "status": "has been added to the system"})//return 201 status and message
-}
-
 func main() {
 
 router := gin.Default()
 
-router.POST("/task", CreateTask)
+router.GET("/", Welcome)
 router.POST("/bulk-audit", BulkAudit)
 
 router.Run(":8080")
