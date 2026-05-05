@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"sync"
 	"github.com/gin-gonic/gin"
-	//"database/sql"
+	"database/sql"
+	"log"
 )
+
+var db *sql.DB//sql db for total cost persistence
 
 func Welcome(c *gin.Context) {
 fmt.Println("Welcome to Taskmaster API")
@@ -29,44 +32,62 @@ func BulkAudit(c *gin.Context) {
 		c.JSON(400, gin.H{"error": "Invalid request format"})
 		return
 	}
-
-	var wg sync.WaitGroup
-	// [results]: A channel to catch reports from our parallel workers
-	results := make(chan string, len(projects))
 	
-	totalCost :=  0 //running tally for cost
+	// 1. DATABASE FETCH: Get previous total
+	var previousTotal int
+	_ = db.QueryRow("SELECT total_sum FROM stats WHERE id = 1").Scan(&previousTotal)
+
+	// 2. CONCURRENCY: Audit and Log simultaneously
+	var wg sync.WaitGroup
+	results := make(chan string, len(projects))
+	batchTotal := 0
 
 	for _, p := range projects {
-	totalCost += p.FixedCost
+		batchTotal += p.FixedCost
 		wg.Add(1)
-		// [go]: Launching a Goroutine for every task in the list
+		// [go]: Launching worker
 		go func(item Project) {
 			defer wg.Done()
+			
+			// TASK: The Activity Logger (DB Exec inside Goroutine)
+			// [Exec]: For SQL that doesn't return data 
+			_, _ = db.Exec("INSERT INTO audit_logs (title, status) VALUES (?, ?)", item.Title, "COMPLETED")
+			
 			results <- item.Check()
 		}(p)
 	}
 
-	// Wait and close in the background
 	wg.Wait()
 	close(results)
 
-	// [finalReport]: Extracting results from the channel into a slice
+	// 3. DATABASE UPDATE: Save the new grand total
+	newGrandTotal := previousTotal + batchTotal
+	_, _ = db.Exec("UPDATE stats SET total_sum = ? WHERE id = 1", newGrandTotal)
+
+	// 4. COLLECT REPORTS
 	var finalReport []string
 	for r := range results {
 		finalReport = append(finalReport, r)
 	}
 
-	// [JSON]: Sending the full report back to the user
+	// [c.JSON]: Unified response
 	c.JSON(200, gin.H{
-		"total_cost": totalCost,
-		"processed_count": len(projects),
+		"batch_total":     batchTotal,
+		"new_grand_total": newGrandTotal,
 		"reports":         finalReport,
 	})
 }
 
 func main() {
 
-router := gin.Default()
+var err error
+// [sql.Open]: Initialize database handle [6]
+db, err = sql.Open("sqlite3", "taskmaster.db")
+if err != nil {
+	log.Fatal(err)
+}
+	
+router := gin.Default()//initialize server
 
 router.GET("/", Welcome)
 router.POST("/bulk-audit", BulkAudit)
