@@ -1,60 +1,61 @@
 package main
 
 import (
-	"fmt"
-	"sync"
-	"github.com/gin-gonic/gin"
 	"database/sql"
+	"fmt"
 	"log"
+	"sync"
+
+	"github.com/gin-gonic/gin"
 )
 
-var db *sql.DB//sql db for total cost persistence
+var db *sql.DB //sql db for total cost persistence
 
 func Welcome(c *gin.Context) {
-fmt.Println("Welcome to Taskmaster API")
+	fmt.Println("Welcome to Taskmaster API")
 }
 
-type Project struct { //create project struct and export as json
-Title string `json:"title"`
-FixedCost int `json:"fixed_cost"`
+type Task struct { //create task struct and export as json
+	Title     string `json:"title"`
+	FixedCost int    `json:"fixed_cost"`
 }
 
-func (p Project) Check() string {
-if p.Title == "" {
-return "Invalid: Missing Title"
-}
-return fmt.Sprintf("Audited: %s with cost %d", p.Title, p.FixedCost)
+func (t Task) Check() string {
+	if t.Title == "" {
+		return "Invalid: Missing Title"
+	}
+	return fmt.Sprintf("Audited: %s with cost %d", t.Title, t.FixedCost)
 }
 
 func BulkAudit(c *gin.Context) {
-	var projects []Project
-	if err := c.ShouldBindJSON(&projects); err != nil {//[ShouldBindJSON]: Gin sees the JSON array and fills our slice
+	var tasks []Task
+	if err := c.ShouldBindJSON(&tasks); err != nil { //[ShouldBindJSON]: Gin sees the JSON array and fills our slice
 		c.JSON(400, gin.H{"error": "Invalid request format"})
 		return
 	}
-	
+
 	// 1. DATABASE FETCH: Get previous total
 	var previousTotal int
 	_ = db.QueryRow("SELECT total_sum FROM stats WHERE id = 1").Scan(&previousTotal)
 
 	// 2. CONCURRENCY: Audit and Log simultaneously
 	var wg sync.WaitGroup
-	results := make(chan string, len(projects))
+	results := make(chan string, len(tasks))
 	batchTotal := 0
 
-	for _, p := range projects {
-		batchTotal += p.FixedCost
+	for _, t := range tasks {
+		batchTotal += t.FixedCost
 		wg.Add(1)
 		// [go]: Launching worker
-		go func(item Project) {
+		go func(item Task) {
 			defer wg.Done()
-			
+
 			// TASK: The Activity Logger (DB Exec inside Goroutine)
-			// [Exec]: For SQL that doesn't return data 
+			// [Exec]: For SQL that doesn't return data
 			_, _ = db.Exec("INSERT INTO audit_logs (title, status) VALUES (?, ?)", item.Title, "COMPLETED")
-			
+
 			results <- item.Check()
-		}(p)
+		}(t)
 	}
 
 	wg.Wait()
@@ -80,17 +81,17 @@ func BulkAudit(c *gin.Context) {
 
 func main() {
 
-var err error
-// [sql.Open]: Initialize database handle [6]
-db, err = sql.Open("sqlite3", "taskmaster.db")
-if err != nil {
-	log.Fatal(err)
-}
-	
-router := gin.Default()//initialize server
+	var err error
+	// [sql.Open]: Initialize database handle [6]
+	db, err = sql.Open("sqlite3", "taskmaster.db")
+	if err != nil {
+		log.Fatal(err)
+	}
 
-router.GET("/", Welcome)
-router.POST("/bulk-audit", BulkAudit)
+	router := gin.Default() //initialize server
 
-router.Run(":8080")
+	router.GET("/", Welcome)
+	router.POST("/bulk-audit", BulkAudit)
+
+	router.Run(":8080")
 }
