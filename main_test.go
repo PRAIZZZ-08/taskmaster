@@ -4,11 +4,11 @@ import "testing" // [testing]: The built-in package for unit tests [4]
 
 // [TestCheck]: Must start with 'Test' and take *testing.T
 func TestCheck(t *testing.T) {
-	task := Task{Description: "Test Task"}
-	expected := "Audited Test Task with cost 0"
+	project := Project{Title: "Test Project"}
+	expected := "Audited: Test Project with cost 0"
 
 	// [Check]: Running the actual project logic
-	result := task.Check()
+	result := project.Check()
 
 	if result != expected {
 		// [Errorf]: Reports a failure and what the expected vs actual was
