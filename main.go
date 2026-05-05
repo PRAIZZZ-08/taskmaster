@@ -29,7 +29,7 @@ return "Invalid: Missing Title"
 }
 return fmt.Sprintf("Audited: %s with cost %d", p.Title, p.FixedCost)
 }
-
+a
 func BulkAudit(c *gin.Context) {
 	var projects []Project
 	if err := c.ShouldBindJSON(&projects); err != nil {//[ShouldBindJSON]: Gin sees the JSON array and fills our slice
