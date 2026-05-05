@@ -82,7 +82,7 @@ func BulkAudit(c *gin.Context) {
 func main() {
 
 	var err error
-	// [sql.Open]: Initialize database handle [6]
+	// [sql.Open]: Initialize database handle
 	db, err = sql.Open("sqlite3", "taskmaster.db")
 	if err != nil {
 		log.Fatal(err)
