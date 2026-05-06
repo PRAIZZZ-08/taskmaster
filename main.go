@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"sync"
-
+	_ "github.com/mattn/go-sqlite3" 
 	"github.com/gin-gonic/gin"
 )
 
