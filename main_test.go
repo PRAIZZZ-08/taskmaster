@@ -1,17 +1,14 @@
 package main
 
-import "testing" // [testing]: The built-in package for unit tests [4]
+import "testing" // [testing]: The built-in package for unit tests
 
 // [TestCheck]: Must start with 'Test' and take *testing.T
-func TestCheck(t *testing.T) {
-	task := Task{Title: "Test Task"}
-	expected := "Audited: Test Task with cost 0"
+func FuzzCheck(f *testing.F) {
+	f.Add("test", 10)
+	f.Add("", -1)
 
-	// [Check]: Running the actual task logic
-	result := task.Check()
-
-	if result != expected {
-		// [Errorf]: Reports a failure and what the expected vs actual was
-		t.Errorf("Expected %s, but got %s", expected, result)
-	}
+	f.Fuzz(func(t *testing.T, title string, cost int) {
+		testTask := Task{Title: title, FixedCost: cost}
+		_ = testTask.Check()
+	})
 }

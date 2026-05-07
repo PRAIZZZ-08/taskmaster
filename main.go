@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"log"
 	"sync"
-	_ "github.com/mattn/go-sqlite3" 
+
 	"github.com/gin-gonic/gin"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 var db *sql.DB //sql db for total cost persistence
@@ -21,6 +22,10 @@ type Task struct { //create task struct and export as json
 }
 
 func (t Task) Check() string {
+	if len(t.Title) > 100 {
+		return "Error: Title too long"
+	}
+
 	if t.Title == "" {
 		return "Invalid: Missing Title"
 	}
