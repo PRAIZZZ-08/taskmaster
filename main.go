@@ -1,97 +1,102 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
-	"log"
-	"sync"
-	_ "github.com/mattn/go-sqlite3" 
-	"github.com/gin-gonic/gin"
+	"os"
+	"strconv"
+
+	"taskmaster/todo"
 )
 
-var db *sql.DB //sql db for total cost persistence
+const taskFile = "tasks.json"
 
-func Welcome(c *gin.Context) {
-	fmt.Println("Welcome to Taskmaster API")
-}
-
-type Task struct { //create task struct and export as json
-	Title     string `json:"title"`
-	FixedCost int    `json:"fixed_cost"`
-}
-
-func (t Task) Check() string {
-	if t.Title == "" {
-		return "Invalid: Missing Title"
-	}
-	return fmt.Sprintf("Audited: %s with cost %d", t.Title, t.FixedCost)
-}
-
-func BulkAudit(c *gin.Context) {
-	var tasks []Task
-	if err := c.ShouldBindJSON(&tasks); err != nil { //[ShouldBindJSON]: Gin sees the JSON array and fills our slice
-		c.JSON(400, gin.H{"error": "Invalid request format"})
+func handleList(tasks []todo.Task) {
+	if tasks == nil || len(tasks) == 0 {
+		fmt.Println("No tasks found.")
 		return
 	}
-
-	// 1. DATABASE FETCH: Get previous total
-	var previousTotal int
-	_ = db.QueryRow("SELECT total_sum FROM stats WHERE id = 1").Scan(&previousTotal)
-
-	// 2. CONCURRENCY: Audit and Log simultaneously
-	var wg sync.WaitGroup
-	results := make(chan string, len(tasks))
-	batchTotal := 0
-
-	for _, t := range tasks {
-		batchTotal += t.FixedCost
-		wg.Add(1)
-		// [go]: Launching worker
-		go func(item Task) {
-			defer wg.Done()
-
-			// TASK: The Activity Logger (DB Exec inside Goroutine)
-			// [Exec]: For SQL that doesn't return data
-			_, _ = db.Exec("INSERT INTO audit_logs (title, status) VALUES (?, ?)", item.Title, "COMPLETED")
-
-			results <- item.Check()
-		}(t)
+	for _, task := range tasks {
+		status := " "
+		if task.IsDone {
+			status = "x"
+		}
+		fmt.Printf("[%s] %d. %s\n", status, task.ID, task.Description)
 	}
+}
 
-	wg.Wait()
-	close(results)
+// Function for add command.
+func handleAdd(tasks []todo.Task, args []string) error {
+	if len(args) == 0 { return fmt.Errorf("description required") }
 
-	// 3. DATABASE UPDATE: Save the new grand total
-	newGrandTotal := previousTotal + batchTotal
-	_, _ = db.Exec("UPDATE stats SET total_sum = ? WHERE id = 1", newGrandTotal)
-
-	// 4. COLLECT REPORTS
-	var finalReport []string
-	for r := range results {
-		finalReport = append(finalReport, r)
+	// Create a new task with the provided description and a unique ID.
+	newTask := todo.Task{
+		ID:          len(tasks) + 1,
+		Description: args[0],
+		IsDone:      false,
 	}
+	// Append the new task to the existing list and save it back to the file.
+	return todo.SaveTasks(taskFile, append(tasks, newTask))
+}
 
-	// [c.JSON]: Unified response
-	c.JSON(200, gin.H{
-		"batch_total":     batchTotal,
-		"new_grand_total": newGrandTotal,
-		"reports":         finalReport,
-	})
+func handleDone(tasks []todo.Task, args []string) error {
+	if len(args) == 0 { return fmt.Errorf("ID required") }
+
+	id, err := strconv.Atoi(args[0])
+
+	for i := range tasks {
+		if tasks[i].ID == id {
+			tasks[i].IsDone = true
+			return todo.SaveTasks(taskFile, tasks)
+		}
+	}
+	return fmt.Errorf("task %d not found", id, err)
+}
+
+func handleDelete(tasks []todo.Task, args []string) error {
+	if len(args) == 0 { return fmt.Errorf("ID required") }
+
+	id, err := strconv.Atoi(args[0])
+	if err != nil { return fmt.Errorf("invalid ID: %v", err) }
+
+	for i := range tasks {
+		if tasks[i].ID == id {
+			delTask := append(tasks[:i], tasks[i+1:]...)
+			return todo.SaveTasks(taskFile, delTask)
+		}
+	}
+	return fmt.Errorf("task %d not found", id)
 }
 
 func main() {
 
-	var err error
-	// [sql.Open]: Initialize database handle
-	db, err = sql.Open("sqlite3", "taskmaster.db")
-	if err != nil {
-		log.Fatal(err)
+	if len(os.Args) < 2 {
+		fmt.Println("Usage: taskmaster [add|list|done|delete]")
+		os.Exit(1)
 	}
 
-	router := gin.Default() //initialize server
+	// Select command from CLI arguments
+	command := os.Args[1]
 
-	router.GET("/", Welcome)
-	router.POST("/bulk-audit", BulkAudit)
+	// Load existing tasks from the file
+	tasks, _ := todo.LoadTasks(taskFile)
 
-	router.Run(":8080")
+	// Route the command to the right logic
+	var err error
+	switch command {
+	case "list":
+		handleList(tasks)
+	case "add":
+		err = handleAdd(tasks, os.Args[2:])
+	case "done":
+		err = handleDone(tasks, os.Args[2:])
+	case "delete":
+		err = handleDelete(tasks, os.Args[2:])
+	default:
+		fmt.Printf("Unknown command: %s\n", command)
+	}
+
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		os.Exit(1)
+	}
 }
