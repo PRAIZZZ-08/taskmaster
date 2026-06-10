@@ -31,7 +31,7 @@ func handleAdd(tasks []todo.Task, args []string) error {
 	// Create a new task with the provided description and a unique ID.
 	newTask := todo.Task{
 		ID:          len(tasks) + 1,
-		Description: args,
+		Description: args[0],
 		IsDone:      false,
 	}
 	// Append the new task to the existing list and save it back to the file.
@@ -41,7 +41,7 @@ func handleAdd(tasks []todo.Task, args []string) error {
 func handleDone(tasks []todo.Task, args []string) error {
 	if len(args) == 0 { return fmt.Errorf("ID required") }
 
-	id, err := strconv.Atoi(args)
+	id, err := strconv.Atoi(args[0])
 
 	for i := range tasks {
 		if tasks[i].ID == id {
@@ -49,13 +49,13 @@ func handleDone(tasks []todo.Task, args []string) error {
 			return todo.SaveTasks(taskFile, tasks)
 		}
 	}
-	return fmt.Errorf("task %d not found", id)
+	return fmt.Errorf("task %d not found", id, err)
 }
 
 func handleDelete(tasks []todo.Task, args []string) error {
 	if len(args) == 0 { return fmt.Errorf("ID required") }
 
-	id, err := strconv.Atoi(args)
+	id, err := strconv.Atoi(args[0])
 	if err != nil { return fmt.Errorf("invalid ID: %v", err) }
 
 	for i := range tasks {
