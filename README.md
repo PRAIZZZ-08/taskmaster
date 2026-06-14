@@ -1,128 +1,162 @@
-# TaskMaster
+<p align="center">
+  <img src="https://raw.githubusercontent.com/PRAIZZZ-08/taskmaster/main/assets/banner.png" alt="taskmaster" width="100%">
+</p>
 
-> A concurrent, expressive RESTful API engine for auditing and project management built in Go.
+<h1 align="center">taskmaster</h1>
 
-[![Go Version](https://img.shields.io/badge/Go-1.25.0+-00ADD8?style=flat&logo=go)](https://golang.org/)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Build](https://img.shields.io/badge/build-passing-brightgreen)]()
-[![API Version](https://img.shields.io/badge/API-v1.1.0-orange)]()
+<p align="center">
+  <em>A fast, no nonsense CLI task manager that lives where you work — the terminal.</em>
+</p>
 
----
+<p align="center">
+  <a href="https://github.com/PRAIZZZ-08/taskmaster/actions"><img src="https://img.shields.io/github/actions/workflow/status/PRAIZZZ-08/taskmaster/ci.yml?style=flat-square" alt="Build Status"></a>
+  <a href="https://github.com/PRAIZZZ-08/taskmaster/releases"><img src="https://img.shields.io/github/v/release/PRAIZZZ-08/taskmaster?style=flat-square" alt="Latest Release"></a>
+  <a href="https://pkg.go.dev/taskmaster"><img src="https://pkg.go.dev/badge/taskmaster.svg" alt="Go Reference"></a>
+  <a href="https://goreportcard.com/report/github.com/PRAIZZZ-08/taskmaster"><img src="https://goreportcard.com/badge/github.com/PRAIZZZ-08/taskmaster?style=flat-square" alt="Go Report Card"></a>
+  <a href="https://github.com/PRAIZZZ-08/taskmaster/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License: MIT"></a>
+  <a href="https://golang.org/dl/"><img src="https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat-square&logo=go" alt="Go Version"></a>
+</p>
 
-## Overview
-
-TaskMaster is a high-performance RESTful API that provides a concurrent engine for auditing and project management. It is designed around Go's native concurrency primitives to process bulk data simultaneously, with clean modular architecture and a focus on code adaptability.
-
----
-
-## Architecture
-
-```
-  [ CLIENT ] ──(POST /bulk-audit)──► [ GIN ROUTER ]
-                                           │
-          ┌────────────────────────────────┴────────────────────────┐
-          ▼                                                         ▼
-  [ SQL DATABASE ] ◄─────── [ CONCURRENCY ENGINE ] ────────► [ JSON RESPONSE ]
-  (Persistent Stats)        (Goroutine Workers)             (Final Report)
-```
+<p align="center">
+  <img src="./demo.gif" alt="taskmaster demo" width="800">
+</p>
 
 ---
 
-## How It Works
+## What is taskmaster?
 
-TaskMaster's core processing model is built on three Go concurrency primitives:
+Taskmaster is a terminal first task manager built in Go. Your tasks are stored as plain JSON — no database daemon, no cloud sync required, no account to create. It starts up instantly, does exactly what you tell it, and stays out of your way.
 
-| Primitive | Role |
-|---|---|
-| **Goroutines** | Spawn parallel workers for every incoming audit request |
-| **Channels** | Safely communicate results between workers and the main API handler |
-| **WaitGroups** | Synchronize the Foreman — ensuring all workers finish before the final report is dispatched |
+I built it because most todo tools are either too simple (sticky notes) or too heavy (project management suites). Taskmaster lives in the middle: a single binary that manages your list with four commands, stores data in a file you can read and version-control, and gets out of the way the moment you're done.
+
+Tasks persist between sessions. The list is yours. No lock-in.
 
 ---
 
 ## Features
 
-- **Bulk Validation** — Submit arrays of tasks for simultaneous, high-speed processing via a single API call.
-- **Data Persistence** — Tracks and accumulates cumulative grand totals in a relational database using Go's `database/sql` package.
-- **SQL Injection Protection** — All queries use prepared statements and parameterized placeholders.
-- **Standardized Output** — All responses are marshalled into clean, lowercase JSON for broad web compatibility.
+- ✅ **Add tasks** — Append a task to your list with a single command
+- 📋 **List tasks** — See every pending and completed task at a glance
+- ✔️ **Mark done** — Flag any task complete by its ID
+- 🗑️ **Delete tasks** — Remove a task permanently by ID
+- 💾 **JSON persistence** — Tasks are stored in a human-readable `tasks.json` file you can inspect, back up, or version-control
+- ⚡ **Zero dependencies at runtime** — Single compiled binary, no runtime required
+- 🔬 **Tested** — Core save/load logic covered by unit tests
 
 ---
 
-## Getting Started
+## Installation
 
-### Prerequisites
+### From source (recommended)
 
-- [Go](https://golang.org/dl/) `1.25.0` or higher
-- SQLite3 drivers (installed automatically via `go mod tidy`)
-
-### Installation
-
-Clone the repository and install dependencies:
+Requires Go 1.25 or later.
 
 ```bash
 git clone https://github.com/PRAIZZZ-08/taskmaster.git
 cd taskmaster
-go mod tidy
+go build -o taskmaster .
 ```
 
-### Build
-
-Compile the project into a native binary:
+Move the binary somewhere on your `$PATH`:
 
 ```bash
-go build
+mv taskmaster /usr/local/bin/
 ```
 
-### Run
+### With `go install`
 
 ```bash
-./taskmaster
+go install github.com/PRAIZZZ-08/taskmaster@latest
 ```
 
-The API server will start and listen for incoming requests.
+### Verify installation
 
----
-
-## API Reference
-
-### `POST /bulk-audit`
-
-Submit an array of tasks to be audited concurrently.
-
-**Request Body**
-
-```json
-{
-  "tasks": [
-    { "title": "Task One", "fixed_cost": 100 },
-    { "title": "Task Two", "fixed_cost": 200 }
-  ]
-}
-```
-
-**Response**
-
-```json
-{
-  "status": "complete",
-  "processed": 2,
-  "grand_total": 42,
-  "results": [...]
-}
+```bash
+taskmaster
+# Usage: taskmaster [add|list|done|delete]
 ```
 
 ---
 
-## Testing
+## Usage
 
-Automated unit tests cover all core audit logic. Run the full test suite with:
+### Add a task
 
 ```bash
-go test -v ./...
+taskmaster add "Write unit tests for the auth module"
 ```
 
-All `_test.go` files in the module will be discovered and executed.
+### List all tasks
+
+```bash
+taskmaster list
+```
+
+Output:
+
+```
+[ ] 1. Write unit tests for the auth module
+[ ] 2. Update the deployment docs
+[x] 3. Fix the login redirect bug
+```
+
+Tasks marked with `[x]` are complete. Tasks marked with `[ ]` are still pending.
+
+### Mark a task as done
+
+```bash
+taskmaster done 1
+```
+
+### Delete a task
+
+```bash
+taskmaster delete 2
+```
+
+---
+
+## Task Storage
+
+All tasks are written to `tasks.json` in the current working directory. The format is human-readable:
+
+```json
+[
+  {
+    "id": 1,
+    "description": "Write unit tests for the auth module",
+    "is_done": true
+  },
+  {
+    "id": 2,
+    "description": "Update the deployment docs",
+    "is_done": false
+  }
+]
+```
+
+You can commit this file to version control, copy it between machines, or edit it manually if needed. Taskmaster will read it back correctly on next run.
+
+---
+
+## Configuration
+
+No configuration file is required. Taskmaster uses a single constant for the task file path (`tasks.json`) defined in `main.go`. To change the storage location, rebuild with a modified `taskFile` constant, or point your shell alias to a wrapper that changes directory first.
+
+---
+
+## Running Tests
+
+```bash
+go test ./...
+```
+
+Tests cover the core persistence layer — saving tasks to disk and loading them back correctly, including error handling for missing files.
+
+```
+PASS
+ok      taskmaster    0.003s
+```
 
 ---
 
@@ -130,26 +164,35 @@ All `_test.go` files in the module will be discovered and executed.
 
 ```
 taskmaster/
-├── main.go          # Entry point and router setup
-├── audit/           # Core audit and concurrency engine
-├── db/              # Database layer and persistence logic
-├── models/          # Shared data types and structs
-├── handlers/        # Gin HTTP handlers
-└── *main_test.go        # Unit tests
+ ├── demo.tape
+ ├── go.mod
+ ├── go.sum
+ ├── LICENSE
+ ├── main.go # CLI entry point and command routing
+ ├── README.md
+ ├── taskmaster
+ ├── tasks.json # Runtime task storage (created on first add)
+ └── todo
+     ├── task.go # Task struct, SaveTasks, LoadTasks
+     ├── task_test.go # Unit tests for persistence layer
+     └── test_tasks.json # Fixture used by tests
 ```
 
 ---
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/your-feature`)
-3. Commit your changes (`git commit -m 'Add your feature'`)
-4. Push to the branch (`git push origin feature/your-feature`)
-5. Open a Pull Request
+Pull requests are welcome. For significant changes, open an issue first to discuss what you'd like to change.
+
+1. Fork the repo
+2. Create a feature branch: `git checkout -b feat/my-feature`
+3. Commit your changes: `git commit -m "feat: add my feature"`
+4. Push and open a pull request
+
+Please update tests as needed.
 
 ---
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+MIT © [Pamilerin Sodeke](https://github.com/PRAIZZZ-08)
