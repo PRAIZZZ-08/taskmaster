@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"taskmaster/todo"
 )
@@ -11,7 +12,7 @@ import (
 const taskFile = "tasks.json"
 
 func handleList(tasks []todo.Task) {
-	if tasks == nil || len(tasks) == 0 {
+	if len(tasks) == 0 {
 		fmt.Println("No tasks found.")
 		return
 	}
@@ -26,12 +27,17 @@ func handleList(tasks []todo.Task) {
 
 // Function for add command.
 func handleAdd(tasks []todo.Task, args []string) error {
-	if len(args) == 0 { return fmt.Errorf("description required") }
+	if len(args) == 0 {
+		return fmt.Errorf("description required")
+	}
+
+	// Join the remaining arguments to form the task description.
+	description := strings.Join(args, " ")
 
 	// Create a new task with the provided description and a unique ID.
 	newTask := todo.Task{
 		ID:          len(tasks) + 1,
-		Description: args[0],
+		Description: description,
 		IsDone:      false,
 	}
 	// Append the new task to the existing list and save it back to the file.
@@ -39,9 +45,15 @@ func handleAdd(tasks []todo.Task, args []string) error {
 }
 
 func handleDone(tasks []todo.Task, args []string) error {
-	if len(args) == 0 { return fmt.Errorf("ID required") }
+	if len(args) == 0 {
+		return fmt.Errorf("ID required")
+	}
 
 	id, err := strconv.Atoi(args[0])
+
+	if err != nil {
+		return fmt.Errorf("invalid ID '%s': %v", args, err)
+	}
 
 	for i := range tasks {
 		if tasks[i].ID == id {
@@ -49,14 +61,18 @@ func handleDone(tasks []todo.Task, args []string) error {
 			return todo.SaveTasks(taskFile, tasks)
 		}
 	}
-	return fmt.Errorf("task %d not found", id, err)
+	return fmt.Errorf("task %d not found", id)
 }
 
 func handleDelete(tasks []todo.Task, args []string) error {
-	if len(args) == 0 { return fmt.Errorf("ID required") }
+	if len(args) == 0 {
+		return fmt.Errorf("ID required")
+	}
 
 	id, err := strconv.Atoi(args[0])
-	if err != nil { return fmt.Errorf("invalid ID: %v", err) }
+	if err != nil {
+		return fmt.Errorf("invalid ID: %v", err)
+	}
 
 	for i := range tasks {
 		if tasks[i].ID == id {
