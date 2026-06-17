@@ -17,15 +17,15 @@ Enter
 Sleep 2s
 
 # Add some tasks
-Type "taskmaster add \"Write unit tests for the auth module\""
+Type `taskmaster add "Write unit tests for the auth module"`
 Enter
 Sleep 1s
 
-Type "taskmaster add \"Update the deployment docs\""
+Type `taskmaster add "Update the deployment docs"`
 Enter
 Sleep 1s
 
-Type "taskmaster add \"Fix the login redirect bug\""
+Type `taskmaster add "Fix the login redirect bug"`
 Enter
 Sleep 1s
 

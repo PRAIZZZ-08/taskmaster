@@ -11,7 +11,7 @@
 <p align="center">
   <a href="https://github.com/PRAIZZZ-08/taskmaster/actions"><img src="https://img.shields.io/github/actions/workflow/status/PRAIZZZ-08/taskmaster/ci.yml?style=flat-square" alt="Build Status"></a>
   <a href="https://github.com/PRAIZZZ-08/taskmaster/releases"><img src="https://img.shields.io/github/v/release/PRAIZZZ-08/taskmaster?style=flat-square" alt="Latest Release"></a>
-  <a href="https://pkg.go.dev/taskmaster"><img src="https://pkg.go.dev/badge/taskmaster.svg" alt="Go Reference"></a>
+  <a href="https://pkg.go.dev/github.com/PRAIZZZ-08/taskmaster"><img src="https://pkg.go.dev/badge/github.com/PRAIZZZ-08/taskmaster.svg" alt="Go Reference"></a>
   <a href="https://goreportcard.com/report/github.com/PRAIZZZ-08/taskmaster"><img src="https://goreportcard.com/badge/github.com/PRAIZZZ-08/taskmaster?style=flat-square" alt="Go Report Card"></a>
   <a href="https://github.com/PRAIZZZ-08/taskmaster/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License: MIT"></a>
   <a href="https://golang.org/dl/"><img src="https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat-square&logo=go" alt="Go Version"></a>
@@ -154,8 +154,8 @@ go test ./...
 Tests cover the core persistence layer — saving tasks to disk and loading them back correctly, including error handling for missing files.
 
 ```
-PASS
-ok      taskmaster    0.003s
+?       github.com/PRAIZZZ-08/taskmaster        [no test files]
+ok      github.com/PRAIZZZ-08/taskmaster/todo   0.004s
 ```
 
 ---
@@ -164,19 +164,34 @@ ok      taskmaster    0.003s
 
 ```
 taskmaster/
- ├── demo.tape
+ ├── assets/
+ │   └── banner.png # README banner
+ ├── demo.gif # Recorded terminal walkthrough, embedded above
+ ├── demo.tape # VHS script that generates demo.gif
  ├── go.mod
- ├── go.sum
  ├── LICENSE
  ├── main.go # CLI entry point and command routing
  ├── README.md
- ├── taskmaster
- ├── tasks.json # Runtime task storage (created on first add)
+ ├── taskmaster # Compiled binary (gitignored, produced by `go build`)
+ ├── tasks.json # Runtime task storage (gitignored, created on first add)
  └── todo
      ├── task.go # Task struct, SaveTasks, LoadTasks
      ├── task_test.go # Unit tests for persistence layer
      └── test_tasks.json # Fixture used by tests
 ```
+
+---
+
+## Regenerating the Demo
+
+The terminal recording at the top of this README is generated with [VHS](https://github.com/charmbracelet/vhs) from the script in `demo.tape`. If you change the CLI's commands or output, regenerate the recording so the README stays accurate:
+
+```bash
+go build -o taskmaster .
+vhs demo.tape
+```
+
+This produces a fresh `demo.gif` in the repo root. VHS needs a few things on your machine to run: [ttyd](https://github.com/tsl0922/ttyd), `ffmpeg`, and a Chromium-based browser (VHS drives a headless browser to render the recording). See the [VHS installation docs](https://github.com/charmbracelet/vhs#installation) for setup instructions per platform.
 
 ---
 
