@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"taskmaster/todo"
+	"github.com/PRAIZZZ-08/taskmaster/todo"
 )
 
 const taskFile = "tasks.json"
@@ -54,8 +54,6 @@ func handleDone(tasks []todo.Task, args []string) error {
 	if err != nil {
 		return fmt.Errorf("invalid ID '%s': %v", args, err)
 	}
-	return fmt.Errorf("task %d not found", id, err)
-}
 
 	for i := range tasks {
 		if tasks[i].ID == id {
