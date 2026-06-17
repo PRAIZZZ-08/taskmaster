@@ -14,7 +14,7 @@
   <a href="https://pkg.go.dev/github.com/PRAIZZZ-08/taskmaster"><img src="https://pkg.go.dev/badge/github.com/PRAIZZZ-08/taskmaster.svg" alt="Go Reference"></a>
   <a href="https://goreportcard.com/report/github.com/PRAIZZZ-08/taskmaster"><img src="https://goreportcard.com/badge/github.com/PRAIZZZ-08/taskmaster?style=flat-square" alt="Go Report Card"></a>
   <a href="https://github.com/PRAIZZZ-08/taskmaster/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License: MIT"></a>
-  <a href="https://golang.org/dl/"><img src="https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat-square&logo=go" alt="Go Version"></a>
+  <a href="https://golang.org/dl/"><img src="https://img.shields.io/badge/Go-1.24+-00ADD8?style=flat-square&logo=go" alt="Go Version"></a>
 </p>
 
 <p align="center">
@@ -49,7 +49,7 @@ Tasks persist between sessions. The list is yours. No lock-in.
 
 ### From source (recommended)
 
-Requires Go 1.25 or later.
+Requires Go 1.24 or later.
 
 ```bash
 git clone https://github.com/PRAIZZZ-08/taskmaster.git
