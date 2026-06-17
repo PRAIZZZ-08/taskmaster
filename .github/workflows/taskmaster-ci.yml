@@ -1,0 +1,64 @@
+name: taskmaster-ci
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint:
+    name: Code Linting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+          cache: true
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+
+  test:
+    name: Build and Test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+            
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.24.x'
+        cache: true
+
+    - name: Verify dependencies
+      run: go mod verify
+
+    - name: Build code
+      run: go build -v ./...
+
+    - name: Run unit tests (Linux / macOS)
+      if: matrix.os != 'windows-latest'
+      run: go test -v -race -covermode=atomic -coverprofile=coverage.out ./...
+
+    - name: Run unit tests (Windows)
+      if: matrix.os == 'windows-latest'
+      run: go test -v -race -covermode="atomic" -coverprofile="coverage.out" ./...
+
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v5
+      with:
+        files: ./coverage.out
+        fail_ci_if_error: false

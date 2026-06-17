@@ -8,9 +8,9 @@ import (
 
 // Task Struct
 type Task struct {
-	ID int `json:"id"`
+	ID          int    `json:"id"`
 	Description string `json:"description"`
-	IsDone bool `json:"is_done"`
+	IsDone      bool   `json:"is_done"`
 }
 
 // Function returns string representation of Task struct.
@@ -19,7 +19,7 @@ func SaveTasks(filename string, tasks []Task) error {
 	if err != nil {
 		return fmt.Errorf("could not marshal tasks: %v", err)
 	}
-	return os.WriteFile(filename, data, 0644) 
+	return os.WriteFile(filename, data, 0644)
 }
 
 // Function to load tasks from a JSON file and return a slice of Task structs.
@@ -30,10 +30,10 @@ func LoadTasks(filename string) ([]Task, error) {
 	}
 
 	var tasks []Task // Declare container
-	err = json.Unmarshal(data, &tasks) 
+	err = json.Unmarshal(data, &tasks)
 	if err != nil {
 		return nil, fmt.Errorf("could not unmarshal tasks: %v", err)
 	}
 
-	return tasks, nil 
+	return tasks, nil
 }
